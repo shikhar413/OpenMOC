@@ -167,6 +167,9 @@ public:
   void initializeSegments();
   void printTimerReport();
   void resetFSRVolumes();
+  
+  //@Shikhar
+  void virtualDensityMethod(Material* perturbed_material);
 };
 
 #endif /* TRACKGENERATOR_H_ */

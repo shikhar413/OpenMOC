@@ -1951,11 +1951,13 @@ void TrackGenerator::splitSegments(FP_PRECISION max_optical_length) {
  *          struct with the current Material found in each FSR.
  */
 void TrackGenerator::initializeSegments() {
-
+  
   if (!_contains_tracks)
     log_printf(ERROR, "Unable to initialize segments since "
 	       "tracks have not yet been generated");
-
+  
+  return;
+  
   /* Get all of the Materials from the Geometry */
   std::map<int, Material*> materials = _geometry->getAllMaterials();
 
@@ -2055,4 +2057,43 @@ void TrackGenerator::resetStatus() {
   _contains_tracks = false;
   _use_input_file = false;
   _tracks_filename = "";
+}
+
+//@Shikhar
+
+void TrackGenerator::virtualDensityMethod(Material* perturbed_material) {
+  //printf("Hello World\n");
+
+  segment* curr_segment;
+  Material* curr_mat;
+  
+  int num_mod_tracks = 0;
+  int num_fuel_tracks = 0;
+
+  for (int i=0; i < _num_azim_2; i++) {
+    for (int j=0; j < _num_tracks[i]; j++) {
+      //std::cout << _tracks[i][j].toString();
+      for (int s=0; s < _tracks[i][j].getNumSegments(); s++) {
+        curr_segment = _tracks[i][j].getSegment(s);
+        curr_mat = curr_segment->_material;
+        if (std::string(curr_mat->getName()).compare("moderator") == 0) {
+          //printf("  Seg Length: %f \n", curr_segment->_length);
+          //printf("  Seg Material: %s \n", curr_mat->getName());
+          //printf("  Num Segs: %d \n", _tracks[i][j].getNumSegments());
+          num_mod_tracks++;
+          // if intersects
+          if (_tracks[i][j].getNumSegments() == 3) {
+            curr_segment->_material = perturbed_material;
+            //printf("  Material changed\n");
+          }
+        }
+        else if (std::string(curr_mat->getName()).compare("fuel") == 0) {
+          num_fuel_tracks++;
+        }
+      }
+    }
+  }
+  
+  //printf("%d\n", num_mod_tracks);
+  printf("%d\n", num_fuel_tracks);  
 }
