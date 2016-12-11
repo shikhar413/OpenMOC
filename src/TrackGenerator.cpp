@@ -1,5 +1,6 @@
 #include "TrackGenerator.h"
 #include "TrackTraversingAlgorithms.h"
+#include <math.h>
 
 /**
  * @brief Constructor for the TrackGenerator assigns default values.
@@ -2061,39 +2062,98 @@ void TrackGenerator::resetStatus() {
 
 //@Shikhar
 
-void TrackGenerator::virtualDensityMethod(Material* perturbed_material) {
+void TrackGenerator::virtualDensityMethod(FP_PRECISION lambda) {
   //printf("Hello World\n");
 
-  segment* curr_segment;
-  Material* curr_mat;
+  segment* fuel_segment;
+  segment* mod_segment1;
+  segment* mod_segment2;
+  Material* fuel_mat;
+  Material* mod_mat1;
+  Material* mod_mat2;
   
   int num_mod_tracks = 0;
   int num_fuel_tracks = 0;
 
   for (int i=0; i < _num_azim_2; i++) {
     for (int j=0; j < _num_tracks[i]; j++) {
-      //std::cout << _tracks[i][j].toString();
-      for (int s=0; s < _tracks[i][j].getNumSegments(); s++) {
-        curr_segment = _tracks[i][j].getSegment(s);
-        curr_mat = curr_segment->_material;
-        if (std::string(curr_mat->getName()).compare("moderator") == 0) {
-          //printf("  Seg Length: %f \n", curr_segment->_length);
-          //printf("  Seg Material: %s \n", curr_mat->getName());
-          //printf("  Num Segs: %d \n", _tracks[i][j].getNumSegments());
-          num_mod_tracks++;
-          // if intersects
-          if (_tracks[i][j].getNumSegments() == 3) {
-            curr_segment->_material = perturbed_material;
-            //printf("  Material changed\n");
+      if (_tracks[i][j].getNumSegments() == 3) {
+        fuel_segment = _tracks[i][j].getSegment(1);
+        fuel_mat = fuel_segment->_material;
+        
+        mod_segment1 = _tracks[i][j].getSegment(0);
+        mod_mat1 = mod_segment1->_material;
+        
+        mod_segment2 = _tracks[i][j].getSegment(2);
+        mod_mat2 = mod_segment2->_material;
+      
+        FP_PRECISION c0, r0;
+        c0 = fuel_segment->_length;
+        r0 = 0.8;
+        FP_PRECISION factor = 2.0*sqrt(r0*r0*(lambda*lambda-1.0)+c0*c0/4.0)/c0;
+        FP_PRECISION c1 = factor*c0;
+        FP_PRECISION factor2 = 1.0-(c1-c0)/r0;
+        
+        Material* fuel_mat_clone = fuel_mat->clone();
+        Material* mod_mat_clone1 = mod_mat1->clone();
+        Material* mod_mat_clone2 = mod_mat2->clone();
+        
+        fuel_mat_clone->setName("fuel1");
+        mod_mat_clone1->setName("mod1");
+        mod_mat_clone2->setName("mod2");
+        
+        for (int i=0; i < fuel_mat->getNumEnergyGroups(); i++) {
+          fuel_mat_clone->setSigmaTByGroup(factor*fuel_mat_clone->getSigmaTByGroup(i+1), i+1);
+          fuel_mat_clone->setSigmaFByGroup(factor*fuel_mat_clone->getSigmaFByGroup(i+1), i+1);
+          fuel_mat_clone->setNuSigmaFByGroup(factor*fuel_mat_clone->getNuSigmaFByGroup(i+1), i+1);
+          
+          mod_mat_clone1->setSigmaTByGroup(factor*mod_mat_clone1->getSigmaTByGroup(i+1), i+1);
+          mod_mat_clone1->setSigmaFByGroup(factor*mod_mat_clone1->getSigmaFByGroup(i+1), i+1);
+          mod_mat_clone1->setNuSigmaFByGroup(factor*mod_mat_clone1->getNuSigmaFByGroup(i+1), i+1);
+          
+          mod_mat_clone2->setSigmaTByGroup(factor*mod_mat_clone2->getSigmaTByGroup(i+1), i+1);
+          mod_mat_clone2->setSigmaFByGroup(factor*mod_mat_clone2->getSigmaFByGroup(i+1), i+1);
+          mod_mat_clone2->setNuSigmaFByGroup(factor*mod_mat_clone2->getNuSigmaFByGroup(i+1), i+1);
+
+          for (int j=0; j < fuel_mat->getNumEnergyGroups(); j++) {
+            fuel_mat_clone->setSigmaSByGroup(factor*fuel_mat_clone->getSigmaSByGroup(i+1, j+1), i+1, j+1);
+            mod_mat_clone1->setSigmaSByGroup(factor*mod_mat_clone1->getSigmaSByGroup(i+1, j+1), i+1, j+1);
+            mod_mat_clone2->setSigmaSByGroup(factor*mod_mat_clone2->getSigmaSByGroup(i+1, j+1), i+1, j+1);
           }
         }
-        else if (std::string(curr_mat->getName()).compare("fuel") == 0) {
-          num_fuel_tracks++;
-        }
+        
+        
+        
+        //printf("%f %f %f\n", factor, fuel_mat->getSigmaTByGroup(1), fuel_mat_clone->getSigmaTByGroup(1));
+        //printf("%f %f %f\n", factor2, mod_mat1->getSigmaTByGroup(1), mod_mat_clone1->getSigmaTByGroup(1));
+        //printf("%f %f %f\n", factor2, mod_mat2->getSigmaTByGroup(1), mod_mat_clone2->getSigmaTByGroup(1));
+        
+        fuel_segment->_material = fuel_mat_clone;
+        mod_segment1->_material = mod_mat_clone1;
+        mod_segment2->_material = mod_mat_clone2;
+        
+        printf("  Material changed\n");
+
       }
     }
   }
   
   //printf("%d\n", num_mod_tracks);
-  printf("%d\n", num_fuel_tracks);  
+  //printf("%d\n", num_fuel_tracks);  
+}
+
+
+void TrackGenerator::testMethod() {
+  segment* curr_segment;
+  Material* curr_mat;
+  
+  for (int i=0; i < _num_azim_2; i++) {
+    for (int j=0; j < _num_tracks[i]; j++) {
+      for (int s=0; s < _tracks[i][j].getNumSegments(); s++) {
+        curr_segment = _tracks[i][j].getSegment(s);
+        curr_mat = curr_segment->_material;
+        printf("%s %f %f\n", curr_mat->getName(), curr_mat->getSigmaTByGroup(1), curr_segment->_length);
+      }
+    }
+  }
 }

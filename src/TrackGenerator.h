@@ -169,7 +169,8 @@ public:
   void resetFSRVolumes();
   
   //@Shikhar
-  void virtualDensityMethod(Material* perturbed_material);
+  void virtualDensityMethod(FP_PRECISION lambda);
+  void testMethod();
 };
 
 #endif /* TRACKGENERATOR_H_ */
