@@ -2062,7 +2062,7 @@ void TrackGenerator::resetStatus() {
 
 //@Shikhar
 
-void TrackGenerator::virtualDensityMethod(FP_PRECISION lambda, FP_PRECISION rad) {
+void TrackGenerator::virtualDensityMethod(FP_PRECISION lmbda, FP_PRECISION rad) {
   //printf("Hello World\n");
 
   segment* fuel_segment;
@@ -2092,7 +2092,7 @@ void TrackGenerator::virtualDensityMethod(FP_PRECISION lambda, FP_PRECISION rad)
         r1 = mod_segment1->_length;
         r2 = mod_segment2->_length;
         
-        FP_PRECISION factor = 2.0*sqrt(rad*rad*(lambda*lambda-1.0)+c0*c0/4.0)/c0;
+        FP_PRECISION factor = 2.0*sqrt(rad*rad*(lmbda*lmbda-1.0)+c0*c0/4.0)/c0;
         FP_PRECISION c1 = factor*c0;
         FP_PRECISION factor2 = 1.0-(c1-c0)/2.0/r1;
         FP_PRECISION factor3 = 1.0-(c1-c0)/2.0/r2;
