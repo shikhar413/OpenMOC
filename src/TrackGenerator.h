@@ -169,7 +169,7 @@ public:
   void resetFSRVolumes();
   
   //@Shikhar
-  void virtualDensityMethod(FP_PRECISION lambda);
+  void virtualDensityMethod(FP_PRECISION lambda, FP_PRECISION rad);
   void testMethod();
 };
 

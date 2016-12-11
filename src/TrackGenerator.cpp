@@ -2062,7 +2062,7 @@ void TrackGenerator::resetStatus() {
 
 //@Shikhar
 
-void TrackGenerator::virtualDensityMethod(FP_PRECISION lambda) {
+void TrackGenerator::virtualDensityMethod(FP_PRECISION lambda, FP_PRECISION rad) {
   //printf("Hello World\n");
 
   segment* fuel_segment;
@@ -2087,12 +2087,15 @@ void TrackGenerator::virtualDensityMethod(FP_PRECISION lambda) {
         mod_segment2 = _tracks[i][j].getSegment(2);
         mod_mat2 = mod_segment2->_material;
       
-        FP_PRECISION c0, r0;
+        FP_PRECISION c0, r1, r2;
         c0 = fuel_segment->_length;
-        r0 = 0.8;
-        FP_PRECISION factor = 2.0*sqrt(r0*r0*(lambda*lambda-1.0)+c0*c0/4.0)/c0;
+        r1 = mod_segment1->_length;
+        r2 = mod_segment2->_length;
+        
+        FP_PRECISION factor = 2.0*sqrt(rad*rad*(lambda*lambda-1.0)+c0*c0/4.0)/c0;
         FP_PRECISION c1 = factor*c0;
-        FP_PRECISION factor2 = 1.0-(c1-c0)/r0;
+        FP_PRECISION factor2 = 1.0-(c1-c0)/2.0/r1;
+        FP_PRECISION factor3 = 1.0-(c1-c0)/2.0/r2;
         
         Material* fuel_mat_clone = fuel_mat->clone();
         Material* mod_mat_clone1 = mod_mat1->clone();
@@ -2107,18 +2110,18 @@ void TrackGenerator::virtualDensityMethod(FP_PRECISION lambda) {
           fuel_mat_clone->setSigmaFByGroup(factor*fuel_mat_clone->getSigmaFByGroup(i+1), i+1);
           fuel_mat_clone->setNuSigmaFByGroup(factor*fuel_mat_clone->getNuSigmaFByGroup(i+1), i+1);
           
-          mod_mat_clone1->setSigmaTByGroup(factor*mod_mat_clone1->getSigmaTByGroup(i+1), i+1);
-          mod_mat_clone1->setSigmaFByGroup(factor*mod_mat_clone1->getSigmaFByGroup(i+1), i+1);
-          mod_mat_clone1->setNuSigmaFByGroup(factor*mod_mat_clone1->getNuSigmaFByGroup(i+1), i+1);
+          mod_mat_clone1->setSigmaTByGroup(factor2*mod_mat_clone1->getSigmaTByGroup(i+1), i+1);
+          mod_mat_clone1->setSigmaFByGroup(factor2*mod_mat_clone1->getSigmaFByGroup(i+1), i+1);
+          mod_mat_clone1->setNuSigmaFByGroup(factor2*mod_mat_clone1->getNuSigmaFByGroup(i+1), i+1);
           
-          mod_mat_clone2->setSigmaTByGroup(factor*mod_mat_clone2->getSigmaTByGroup(i+1), i+1);
-          mod_mat_clone2->setSigmaFByGroup(factor*mod_mat_clone2->getSigmaFByGroup(i+1), i+1);
-          mod_mat_clone2->setNuSigmaFByGroup(factor*mod_mat_clone2->getNuSigmaFByGroup(i+1), i+1);
+          mod_mat_clone2->setSigmaTByGroup(factor3*mod_mat_clone2->getSigmaTByGroup(i+1), i+1);
+          mod_mat_clone2->setSigmaFByGroup(factor3*mod_mat_clone2->getSigmaFByGroup(i+1), i+1);
+          mod_mat_clone2->setNuSigmaFByGroup(factor3*mod_mat_clone2->getNuSigmaFByGroup(i+1), i+1);
 
           for (int j=0; j < fuel_mat->getNumEnergyGroups(); j++) {
             fuel_mat_clone->setSigmaSByGroup(factor*fuel_mat_clone->getSigmaSByGroup(i+1, j+1), i+1, j+1);
-            mod_mat_clone1->setSigmaSByGroup(factor*mod_mat_clone1->getSigmaSByGroup(i+1, j+1), i+1, j+1);
-            mod_mat_clone2->setSigmaSByGroup(factor*mod_mat_clone2->getSigmaSByGroup(i+1, j+1), i+1, j+1);
+            mod_mat_clone1->setSigmaSByGroup(factor2*mod_mat_clone1->getSigmaSByGroup(i+1, j+1), i+1, j+1);
+            mod_mat_clone2->setSigmaSByGroup(factor3*mod_mat_clone2->getSigmaSByGroup(i+1, j+1), i+1, j+1);
           }
         }
         
@@ -2132,8 +2135,6 @@ void TrackGenerator::virtualDensityMethod(FP_PRECISION lambda) {
         mod_segment1->_material = mod_mat_clone1;
         mod_segment2->_material = mod_mat_clone2;
         
-        printf("  Material changed\n");
-
       }
     }
   }
